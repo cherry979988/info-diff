@@ -24,6 +24,7 @@ parser.add_argument('--save_epoch', type=int, default=5, help='Save model checkp
 parser.add_argument('--hidden_dim', type=int, default=200, help='RNN hidden state size.')
 parser.add_argument('--num_layers', type=int, default=2, help='Num of RNN layers.')
 parser.add_argument('--dropout', type=float, default=0.5, help='Input and RNN dropout rate.')
+parser.add_argument('--penalty_coeff', type=float, default=0.5, help='Coefficient of Penalty term used in Clash model')
 parser.add_argument('--num_epoch', type=int, default=30)
 parser.add_argument('--log_step', type=int, default=20, help='Print log every k steps.')
 
@@ -62,7 +63,7 @@ dev_batch = DataLoader(os.path.join(opt['data_dir'], 'dev.csv'),
                    weibo2embid=weibo2embid,
                    evaluation=True)
 
-model = ModelWrapper(opt, weibo2embid)
+model = ModelWrapper(opt, weibo2embid, eva=True)
 model.load(os.path.join(opt['model_save_dir'], 'best_model.pt'))
 
 all_probs = []
@@ -81,4 +82,4 @@ print('auc: {}, prec: {}, rec: {}, f1: {}, best_thres: {}'.format(auc, prec, rec
 with open('./log.txt', 'a+') as fout:
     fout.write('\n' + time.asctime(time.localtime(time.time())))
     fout.write(' '.join(sys.argv))
-    fout.write('auc: {}, prec: {}, rec: {}, f1: {}, best_thres: {}\n'.format(auc, prec, rec, f1, best_thres))
+    fout.write('\nauc: {}, prec: {}, rec: {}, f1: {}, best_thres: {}\n'.format(auc, prec, rec, f1, best_thres))

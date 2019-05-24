@@ -28,6 +28,7 @@ parser.add_argument('--save_epoch', type=int, default=5, help='Save model checkp
 parser.add_argument('--hidden_dim', type=int, default=200, help='RNN hidden state size.')
 parser.add_argument('--num_layers', type=int, default=2, help='Num of RNN layers.')
 parser.add_argument('--dropout', type=float, default=0.5, help='Input and RNN dropout rate.')
+parser.add_argument('--penalty_coeff', type=float, default=0.5, help='Coefficient of Penalty term used in Clash model')
 parser.add_argument('--num_epoch', type=int, default=30)
 parser.add_argument('--log_step', type=int, default=20, help='Print log every k steps.')
 
@@ -81,7 +82,7 @@ for i, b in enumerate(dev_batch):
     all_probs += probs
 
 _, _, _, _, best_thres = tune_thres_new(dev_batch.gold(), all_probs)
-# print('Best thres (dev): %.6f' % best_thres)
+print('Best thres (dev): %.6f' % best_thres)
 
 all_probs = []
 for i, b in enumerate(test_batch):

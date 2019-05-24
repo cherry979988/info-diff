@@ -8,7 +8,7 @@ import pickle
 from loader import EmbLoader
 
 class ModelWrapper(object):
-    def __init__(self, opt, weibo2embid=None, retw_dict=None):
+    def __init__(self, opt, weibo2embid=None, retw_dict=None, eva=False):
         self.opt = opt
 
         if opt['model'] == 'InfoLSTM':
@@ -18,7 +18,7 @@ class ModelWrapper(object):
             if opt['cuda']:
                 self.criterion.cuda()
         elif opt['model'] == 'Clash':
-            assert retw_dict is not None
+            assert retw_dict is not None or eva
             self.model = Clash(opt, weibo2embid, retw_dict)
             self.criterion = self.model.criterion
         else:
@@ -70,6 +70,7 @@ class ModelWrapper(object):
         prob, _  = self.model(inputs)
         loss = self.criterion(prob.view(-1), labels.float())
         # probs = F.sigmoid(logits, dim=1).data.cpu().numpy()
+        # print(prob)
         predictions = list(map(int, prob.data.cpu().numpy() > thres))
 
         if unsort:
@@ -193,17 +194,21 @@ class IPModel(nn.Module):
         return predictions, prob
 
 class Clash(nn.Module):
-    def __init__(self, opt, weibo2embid, retw_dict):
+    def __init__(self, opt, weibo2embid, retw_dict, emb_matrix=None):
         super(Clash, self).__init__()
+        opt['emb_size'] = len(weibo2embid) + 1
         self.opt = opt
         self.weibo2embid = weibo2embid
         self.retw_dict = retw_dict
-        opt['emb_size'] = len(weibo2embid) + 1
+        self.emb_matrix = emb_matrix
 
         self.emb = nn.Embedding(opt['emb_size'], opt['emb_dim'], padding_idx=constant.PAD_ID)
-        self.emb.weight.requires_grad = True
+        self.emb_bias = nn.Embedding(opt['emb_size'], 1, padding_idx=constant.PAD_ID)
+        self.blinear = nn.Bilinear(opt['emb_dim'], opt['emb_dim'], 1, bias=False)
+        #self.emb.weight.requires_grad = True
         self.criterion0 = nn.MSELoss()
         # self.register_parameter('mat_emb', self.emb.weight)
+        self.init_weights()
 
         self.mat_clust = torch.randn([opt['emb_dim'], opt['emb_dim']]).requires_grad_()
         if opt['cuda']:
@@ -212,10 +217,21 @@ class Clash(nn.Module):
 
     def init_weights(self):
         if self.emb_matrix is None:
-            self.emb.weight.data[1:, :].uniform_(-1.0, 1.0)  # keep padding dimension to be 0
+            self.emb.weight.data[1:, :].zero_()  # keep padding dimension to be 0
         else:
             self.emb_matrix = torch.from_numpy(self.emb_matrix)
             self.emb.weight.data.copy_(self.emb_matrix)
+
+        if self.retw_dict is not None:
+            self.retw_dict[constant.PAD_ID] = 0.0
+            bias = np.array([project_utils.safe_retrieve(self.retw_dict, k, 1e-10)
+                             for k in range(self.opt['emb_size'])])
+            self.emb_bias_vec = torch.from_numpy(bias).view(-1, 1)
+            self.emb_bias.weight.data.copy_(self.emb_bias_vec)
+
+            self.blinear.weight.data.zero_()
+            # self.blinear.bias.data.copy_(self.emb_bias_vec)
+            # self.blinear.bias.requires_grad = False
 
     def criterion(self, probs, labels):
         c1 = self.criterion0(probs, labels)
@@ -269,8 +285,24 @@ class Clash(nn.Module):
 
         return prob
 
+    def get_probs(self, seen, decision):
+        emb1 = self.emb(seen)
+        emb2 = self.emb(decision)
+        t = self.blinear(emb1, emb2)#.flatten()
+        #t = torch.matmul(torch.matmul(emb1, self.mat_clust), emb2).diag()
+        bias = self.emb_bias(decision)#.flatten()
+        return t + bias
+
     def forward(self, inputs):
         user, seen, seen_users, decision = inputs
         # ret = np.zeros_like(decision)
-        ret = list(map(self.get_seq_prob, zip(seen, decision)))
-        return torch.cat(ret), None
+        seen_flatten = seen.view(-1)
+        decision_flatten = decision.repeat(self.opt['window_size'], 1).t().flatten()
+        assert len(seen_flatten) == len(decision_flatten)
+        log_bias = torch.log(self.emb_bias(decision)).flatten()
+        probs = self.get_probs(seen_flatten, decision_flatten).view(-1, self.opt['window_size'])
+        log_probs = torch.log(probs).sum(dim=1) \
+                    - (self.opt['window_size'] - 1) * log_bias
+        return torch.exp(log_probs), None
+        # ret = list(map(self.get_seq_prob, zip(seen, decision)))
+        # return torch.cat(ret), None

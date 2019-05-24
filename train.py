@@ -69,11 +69,11 @@ dev_batch = DataLoader(os.path.join(opt['data_dir'], 'dev.csv'),
                    opt,
                    weibo2embid=weibo2embid,
                    evaluation=True)
-test_batch = DataLoader(os.path.join(opt['data_dir'], 'test.csv'),
-                   opt['batch_size'],
-                   opt,
-                   weibo2embid=weibo2embid,
-                   evaluation=True)
+# test_batch = DataLoader(os.path.join(opt['data_dir'], 'test.csv'),
+#                    opt['batch_size'],
+#                    opt,
+#                    weibo2embid=weibo2embid,
+#                    evaluation=True)
 
 if not os.path.exists(opt['model_save_dir']):
     os.mkdir(opt['model_save_dir'])
