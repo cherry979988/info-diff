@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 from utils import constant
 # from utils.metrics import metrics
-from utils.metrics import metrics, tune_thres, get_preds
+from utils.metrics import metrics, tune_thres, get_preds, tune_thres_new
 from loader import DataLoader, EmbLoader
 from model import ModelWrapper
 from shutil import copyfile
@@ -31,6 +31,9 @@ parser.add_argument('--num_epoch', type=int, default=30)
 parser.add_argument('--log_step', type=int, default=20, help='Print log every k steps.')
 
 parser.add_argument('--window_size', type=int, default=10)
+parser.add_argument('--no_extra_linear', dest='use_extra_linear', action='store_false')
+parser.add_argument('--use_extra_linear', dest='use_extra_linear', action='store_true')
+parser.set_defaults(use_extra_linear=True)
 
 parser.add_argument('--patience', type=int, default=3)
 parser.add_argument('--lr_decay', type=float, default=0.5)
@@ -110,7 +113,7 @@ for epoch in range(1, opt['num_epoch'] + 1):
     probabilities = []
     dev_loss = 0
     for i, batch in enumerate(dev_batch):
-        preds, probs, loss = model.predict(batch)
+        preds, probs, loss = model.predict(batch, thres=0.01)
         predictions += preds
         probabilities += probs
         dev_loss += loss
@@ -119,7 +122,8 @@ for epoch in range(1, opt['num_epoch'] + 1):
     dev_loss = dev_loss / dev_batch.num_examples * opt['batch_size']
     model.scheduler.step(dev_loss)
 
-    _, _, _, dev_f1 = metrics(dev_batch.gold(), predictions)
+    # _, _, _, dev_f1 = metrics(dev_batch.gold(), predictions)
+    _, _, _, dev_f1, _ = tune_thres_new(dev_batch.gold(), probabilities)
     print("epoch {}: train_loss = {:.6f}, dev_loss = {:.6f}, dev_f1 = {:.4f}".format(epoch,\
             train_loss, dev_loss, dev_f1))
 

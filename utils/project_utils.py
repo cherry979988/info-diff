@@ -15,3 +15,8 @@ def prob_penalty(probs):
     mask = mask.float()
     penalty = probs * (probs - 1)
     return torch.sum(mask * penalty)
+
+def prob_clip(t):
+    ones = torch.ones_like(t)
+    zeros = torch.ones_like(t) * 1e-10
+    return torch.max(torch.min(t, ones), zeros)

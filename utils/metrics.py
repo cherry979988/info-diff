@@ -1,5 +1,6 @@
 import sklearn.metrics
 import numpy as np
+import os
 
 def metrics(gold, pred):
     assert len(gold) == len(pred)
@@ -46,7 +47,7 @@ def tune_thres(label, probs, start=0.0, end=1.0, fold=101):
 def get_preds(probs, thres):
     return list(map(lambda x: int(x > thres), probs))
 
-def tune_thres_new(label, probs):
+def tune_thres_new(label, probs, opt=None):
     assert len(label) == len(probs)
     all_retweet = sum(label)
     result = [(lab, prob) for lab, prob in zip(label, probs)]
@@ -61,6 +62,11 @@ def tune_thres_new(label, probs):
         recall.append(float(correct) / all_retweet)
     auc = sklearn.metrics.auc(x=recall, y=prec)
     print('\n[TUNE] auc: {}'.format(auc))
+
+    if opt:
+        np.save(os.path.join(opt['model_save_dir'], opt['model'] + "_x.npy"), recall)
+        np.save(os.path.join(opt['model_save_dir'], opt['model'] + "_y.npy"), prec)
+
 
     prec = np.array(prec)
     recall = np.array(recall)

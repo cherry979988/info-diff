@@ -33,6 +33,9 @@ parser.add_argument('--num_epoch', type=int, default=30)
 parser.add_argument('--log_step', type=int, default=20, help='Print log every k steps.')
 
 parser.add_argument('--window_size', type=int, default=10)
+parser.add_argument('--no_extra_linear', dest='use_extra_linear', action='store_false')
+parser.add_argument('--use_extra_linear', dest='use_extra_linear', action='store_true')
+parser.set_defaults(use_extra_linear=True)
 
 parser.add_argument('--patience', type=int, default=3)
 parser.add_argument('--lr_decay', type=float, default=0.5)
@@ -56,11 +59,11 @@ print(opt)
 with open(opt['idx_dict'], 'rb') as fin:
     weibo2embid = pickle.load(fin)
 
-train_batch = DataLoader(os.path.join(opt['data_dir'], 'train.csv'),
-                   opt['batch_size'],
-                   opt,
-                   weibo2embid=weibo2embid,
-                   evaluation=False)
+# train_batch = DataLoader(os.path.join(opt['data_dir'], 'train.csv'),
+#                    opt['batch_size'],
+#                    opt,
+#                    weibo2embid=weibo2embid,
+#                    evaluation=False)
 dev_batch = DataLoader(os.path.join(opt['data_dir'], 'dev.csv'),
                    opt['batch_size'],
                    opt,
@@ -72,8 +75,8 @@ test_batch = DataLoader(os.path.join(opt['data_dir'], 'test.csv'),
                    weibo2embid=weibo2embid,
                    evaluation=True)
 
-weibo2embid = train_batch.weibo2embid
-model = ModelWrapper(opt, weibo2embid, train_batch.retw_prob)
+# weibo2embid = train_batch.weibo2embid
+model = ModelWrapper(opt, weibo2embid, eva=True)
 model.load(os.path.join(opt['model_save_dir'], 'best_model.pt'))
 
 all_probs = []
@@ -91,13 +94,13 @@ for i, b in enumerate(test_batch):
 
 preds = get_preds(all_probs, best_thres)
 accuracy, precision, recall, f1 = metrics(test_batch.gold(), preds)
-auc, _, _, _, _ = tune_thres_new(test_batch.gold(), all_probs)
+auc, _, _, _, _ = tune_thres_new(test_batch.gold(), all_probs, opt)
 
-print('Auc: %.4f, Accuracy: %.4f, Precision: %.4f, Recall: %.4f, F1: %.4f' % (auc, accuracy, precision, recall, f1))
+print('Auc: %.6f, Accuracy: %.6f, Precision: %.6f, Recall: %.6f, F1: %.6f' % (auc, accuracy, precision, recall, f1))
 with open('./log.txt', 'a+') as fout:
     fout.write('\n' + time.asctime(time.localtime(time.time())))
     fout.write(' '.join(sys.argv))
-    fout.write('Auc: %.4f, Accuracy: %.4f, Precision: %.4f, Recall: %.4f, F1: %.4f' % (auc, accuracy, precision, recall, f1))
+    fout.write('Auc: %.6f, Accuracy: %.6f, Precision: %.6f, Recall: %.6f, F1: %.6f' % (auc, accuracy, precision, recall, f1))
 
 pickle.dump(all_probs, open('./test_probs.pkl', 'wb'))
 pickle.dump(test_batch.gold(), open('./test_gold.pkl', 'wb'))
