@@ -29,9 +29,14 @@ parser.add_argument('--num_epoch', type=int, default=30)
 parser.add_argument('--log_step', type=int, default=20, help='Print log every k steps.')
 
 parser.add_argument('--window_size', type=int, default=10)
+
 parser.add_argument('--no_extra_linear', dest='use_extra_linear', action='store_false')
 parser.add_argument('--use_extra_linear', dest='use_extra_linear', action='store_true')
 parser.set_defaults(use_extra_linear=True)
+
+parser.add_argument('--train_emb', dest='fix_emb', action='store_false')
+parser.add_argument('--fix_emb', dest='fix_emb', action='store_true')
+parser.set_defaults(fix_emb=False)
 
 parser.add_argument('--patience', type=int, default=3)
 parser.add_argument('--lr_decay', type=float, default=0.5)

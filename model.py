@@ -137,6 +137,8 @@ class InfoLSTM(nn.Module):
         else:
             self.emb_matrix = torch.from_numpy(self.emb_matrix)
             self.emb.weight.data.copy_(self.emb_matrix)
+            if self.opt['fix_emb']:
+                self.emb.weight.requires_grad = False
 
     def zero_state(self, batch_size):
         state_shape = (self.opt['num_layers'], batch_size, self.opt['hidden_dim'])
@@ -236,6 +238,13 @@ class Clash(nn.Module):
         bias = self.emb_bias(decision)#.flatten()
         return project_utils.prob_clip(t + bias)
 
+    def get_delta(self, seen, decision):
+        emb1 = self.emb(seen)
+        emb2 = self.emb(decision)
+        t = self.blinear(emb1, emb2)
+
+        return t
+
     def forward(self, inputs):
         user, seen, seen_users, decision = inputs
         seen_flatten = seen.view(-1)
@@ -283,7 +292,8 @@ class Clash_Enhanced(nn.Module):
         else:
             self.emb_matrix = torch.from_numpy(self.emb_matrix)
             self.emb.weight.data.copy_(self.emb_matrix)
-            # self.emb.weight.requires_grad = False
+            if self.opt['fix_emb']:
+                self.emb.weight.requires_grad = False
 
         if self.retw_dict is not None:
             self.retw_dict[constant.PAD_ID] = 1e-10
@@ -312,6 +322,18 @@ class Clash_Enhanced(nn.Module):
 
         bias = self.emb_bias(decision)
         return project_utils.prob_clip(t + bias)
+
+    def get_delta(self, seen, decision):
+        emb1 = self.emb(seen)
+        emb2 = self.emb(decision)
+        if self.opt['use_extra_linear']:
+            reduced1 = self.linear(emb1)
+            reduced2 = self.linear(emb2)
+            t = self.blinear(reduced1, reduced2)
+        else:
+            t = self.blinear(emb1, emb2)
+
+        return t
 
     def forward(self, inputs):
         user, seen, seen_users, decision = inputs
