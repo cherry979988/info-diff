@@ -76,8 +76,8 @@ url = 'https://weibo.cn/search/'
 
 #请求头，最重要的是cookie和user-agent
 headers = {
-        'cookie':'SUB=_2A25xd-3rDeRhGeNL41QY8SbKyzSIHXVSm_OjrDV6PUJbkdAKLWnskW1NSMfRlWPnS0UmLr6msd747BJetmmokRFp; SUHB=0mxUN7tzuc3IHy; SCF=Ajf8CFaYdZ-Vtwe9DZrML1aiYTQnrCDVaSROMCXLSlG-cLs513iMHMPKQ-70gnpIDjc6kUVk0er1leJUaBcSmLk.; _T_WM=ea07026bc9a35c211e276d137dc7c3f6',
-        'user-agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0'
+        'cookie':'SCF=Au_r7HSvWlbCMWQax_iZyvikU548NneAu-YqG-dctGIpvpwH5WLybJ95PI1AnmxIwqQQ58Voa9geIlNVJao33ss.; SUHB=0vJ5k1093LJ_OS; _T_WM=a5a99fea64f14070e029659809a5d2a9; SUB=_2A25wPRK2DeRhGeRM61IW8ybFyjyIHXVTwb7-rDV6PUJbkdAKLW_WkW1NU-IK-Comypq7sUsmDHlJSWkGZ3gVO9cC; SSOLoginState=1564041958',
+        'user-agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:66.0) Gecko/20100101 Firefox/66.0'
         }
 
 #请求参数，其意义分别是启用高级搜索，关键词，是否原创，起始时间，结束时间，排序方式热门，页数控制

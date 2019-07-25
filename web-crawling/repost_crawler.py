@@ -32,9 +32,9 @@ else:
 heads = ['weiboID', 'username', 'userID', 'content', 'n_delight', 'time', 'previous_username']
 
 headers = {
-        'cookie':'MLOGIN=0; _T_WM=428754f866651a74ed953b4924a39363; M_WEIBOCN_PARAMS=luicode%3D10000011%26lfid%3D102803; SUB=_2A25xd-3rDeRhGeNL41QY8SbKyzSIHXVSm_OjrDV6PUJbkdAKLWnskW1NSMfRlWPnS0UmLr6msd747BJetmmokRFp; SUHB=0mxUN7tzuc3IHy; SCF=Ajf8CFaYdZ-Vtwe9DZrML1aiYTQnrCDVaSROMCXLSlG-cLs513iMHMPKQ-70gnpIDjc6kUVk0er1leJUaBcSmLk.; SSOLoginState=1551080891',
-        'user-agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0'
-}
+        'cookie':'SCF=Au_r7HSvWlbCMWQax_iZyvikU548NneAu-YqG-dctGIpvpwH5WLybJ95PI1AnmxIwqQQ58Voa9geIlNVJao33ss.; SUHB=0vJ5k1093LJ_OS; _T_WM=a5a99fea64f14070e029659809a5d2a9; SUB=_2A25wPRK2DeRhGeRM61IW8ybFyjyIHXVTwb7-rDV6PUJbkdAKLW_WkW1NU-IK-Comypq7sUsmDHlJSWkGZ3gVO9cC; SSOLoginState=1564041958',
+        'user-agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:66.0) Gecko/20100101 Firefox/66.0'
+        }
 
 df0 = pd.read_csv(os.path.join(opt['save_dir'], opt['keyword'], 'content.csv'))
 bid_list = read_bid.get_bid_csv(df0)
@@ -75,7 +75,7 @@ for bid in bid_list:
     while count <= page_all:
         url = pre_url + str(count)
         r = requests.get(url, headers=headers)
-        soup = BeautifulSoup(r.content, 'lxml')
+        soup = BeautifulSoup(r.content, 'html5lib')
         raw_list = soup.find_all('span', attrs={'class':'ct'})
         if len(raw_list) == 0:
             # 转发不被显示的微博，跳过
