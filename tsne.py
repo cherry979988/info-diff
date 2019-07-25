@@ -6,8 +6,10 @@ import torch
 import os
 from loader import EmbLoader
 from model import ModelWrapper
+
 import matplotlib
 matplotlib.use('Agg')
+import seaborn as sns
 import matplotlib.pyplot as plt
 plt.style.use('seaborn')
 
@@ -59,6 +61,7 @@ args = parser.parse_args()
 opt = vars(args)
 
 def cos_sim(a,b):
+    assert len(a) == len(b)
     num = np.sum(np.multiply(a, b))
     denom = np.linalg.norm(a) * np.linalg.norm(b) + 1e-10
     cos = num / denom
@@ -97,6 +100,8 @@ for i in range(len(emb_matrix)):
 if not os.path.exists(os.path.join(opt['model_save_dir'], 'plot')):
     os.mkdir(os.path.join(opt['model_save_dir'], 'plot'))
 
+print('bert_sim max min: ', max(bert_sim), min(bert_sim))
+
 fig = plt.figure()
 cset = plt.scatter(output[:, 0], output[:, 1], s=8, c=bert_sim, cmap='PuBu')
 plt.plot(output[opt['key_id'], 0], output[opt['key_id'], 1], 'r.')
@@ -128,3 +133,19 @@ plt.savefig(os.path.join(opt['model_save_dir'], 'plot', '%d_clash_delta' % opt['
 fig = plt.figure()
 plt.hist(clash_delta, bins=100)
 plt.savefig(os.path.join(opt['model_save_dir'], 'plot', '%d_clash_hist' % opt['key_id']))
+
+
+c = np.polyfit(bert_sim, clash_delta, 1)
+print(c)
+k = c[0]
+b = c[1]
+label = 'y = {:.6f}x + {:.6f}'.format(k, b)
+print(label)
+
+fig = plt.figure()
+assert len(clash_delta) == len(bert_sim)
+sns.regplot(x=bert_sim, y=clash_delta, scatter_kws={'s':2}, label=label)
+plt.legend(loc='upper right', fontsize='large')
+plt.xlabel('Bert Cosine Similarity')
+plt.ylabel('IMM Delta')
+plt.savefig(os.path.join(opt['model_save_dir'], 'plot', '%d_scatter' % opt['key_id']))
