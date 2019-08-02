@@ -84,7 +84,7 @@ dev_batch = DataLoader(os.path.join(opt['data_dir'], 'dev.csv'),
 #                    evaluation=True)
 
 if not os.path.exists(opt['model_save_dir']):
-    os.mkdir(opt['model_save_dir'])
+    os.makedirs(opt['model_save_dir'])
 
 weibo2embid = train_batch.weibo2embid
 
